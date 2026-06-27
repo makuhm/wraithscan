@@ -1,0 +1,7 @@
+user_agent: "PentestToolkit/1.0"
+timeout: 10
+request_delay: 0.05
+threads: 10
+proxy: null
+headers: {}
+cookies: {}
