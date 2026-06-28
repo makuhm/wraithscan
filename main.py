@@ -29,9 +29,12 @@ def build_parser():
     sq = vs.add_parser("sqli")
     sq.add_argument("--param")
     sq.add_argument("--method", choices=["GET","POST"], default="GET")
+<<<<<<< HEAD
     xs = vs.add_parser("xss")
     xs.add_argument("--param")
     xs.add_argument("--method", choices=["GET","POST"], default="GET")
+=======
+>>>>>>> c16ced108e1f612eb29120ab2eb5259e510265fe
 
     # auth
     auth = sub.add_parser("auth")
@@ -70,10 +73,13 @@ def main():
             from modules.vulns.sqli import SQLiTester
             m = SQLiTester(args.target, config, logger)
             m.report(m.run(param=args.param, method=args.method), args.output)
+<<<<<<< HEAD
         elif args.vuln_module == "xss":
             from modules.vulns.xss import XSSTester
             m = XSSTester(args.target, config, logger)
             m.report(m.run(param=args.param, method=args.method), args.output)
+=======
+>>>>>>> c16ced108e1f612eb29120ab2eb5259e510265fe
 
 if __name__ == "__main__":
     main()
