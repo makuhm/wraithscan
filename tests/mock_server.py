@@ -1,18 +1,19 @@
-<<<<<<< HEAD
 """
 Mock HTTP server for Wraithscan testing.
 Simulates realistic vulnerable and safe endpoints.
 """
-=======
-"""Mock HTTP server for testing — realistic responses for known paths."""
->>>>>>> c16ced108e1f612eb29120ab2eb5259e510265fe
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 import json
 
-<<<<<<< HEAD
 # SQLi simulation
 SQLI_ERROR_BODY = b"Warning: mysql_fetch_array() error in your SQL syntax near ''"
+
+# Auth simulation — valid credentials
+VALID_CREDENTIALS = {
+    "admin":  "admin123",
+    "root":   "toor",
+}
 
 # XSS simulation bodies
 def xss_vulnerable_body(value: str) -> bytes:
@@ -35,22 +36,13 @@ def xss_attr_body(value: str) -> bytes:
     """Reflects input inside an HTML attribute — attr context XSS."""
     return f'<html><body><input type="text" value="{value}"></body></html>'.encode()
 
-=======
-SQLI_ERROR_BODY = b"Warning: mysql_fetch_array() error in your SQL syntax near ''"
->>>>>>> c16ced108e1f612eb29120ab2eb5259e510265fe
 ROUTES = {
     "/":           (200, "text/html",        b"<html><body>Home</body></html>"),
     "/admin":      (200, "text/html",        b"<html><body>Admin Panel</body></html>"),
     "/login":      (200, "text/html",        b"<html><body><form>Login</form></body></html>"),
-<<<<<<< HEAD
     "/api":        (200, "application/json", json.dumps({"version": "1.0"}).encode()),
     "/api/users":  (200, "application/json", json.dumps([{"id": 1, "name": "alice"}]).encode()),
     "/api/health": (200, "application/json", json.dumps({"status": "ok"}).encode()),
-=======
-    "/api":        (200, "application/json", json.dumps({"version":"1.0"}).encode()),
-    "/api/users":  (200, "application/json", json.dumps([{"id":1,"name":"alice"}]).encode()),
-    "/api/health": (200, "application/json", json.dumps({"status":"ok"}).encode()),
->>>>>>> c16ced108e1f612eb29120ab2eb5259e510265fe
     "/.git":       (403, "text/html",        b"Forbidden"),
     "/.env":       (403, "text/html",        b"Forbidden"),
     "/backup.zip": (200, "application/zip",  b"FAKE_ZIP"),
@@ -58,35 +50,23 @@ ROUTES = {
     "/phpmyadmin": (301, "text/html",        b"Moved"),
 }
 
-<<<<<<< HEAD
 
-=======
->>>>>>> c16ced108e1f612eb29120ab2eb5259e510265fe
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         parsed = urlparse(self.path)
         path   = parsed.path
         params = parse_qs(parsed.query)
 
-<<<<<<< HEAD
         # --- SQLi simulation ---
-=======
-        # Simulate SQLi: quote in any param -> DB error
->>>>>>> c16ced108e1f612eb29120ab2eb5259e510265fe
         for values in params.values():
             for v in values:
                 if "'" in v or '"' in v:
                     self._respond(500, "text/html", SQLI_ERROR_BODY)
                     return
-<<<<<<< HEAD
-=======
-                # Boolean blind: false condition -> short empty body
->>>>>>> c16ced108e1f612eb29120ab2eb5259e510265fe
                 if "1=2" in v or "x'='y" in v or "AND '1'='2" in v:
                     self._respond(200, "text/html", b"<html><body></body></html>")
                     return
 
-<<<<<<< HEAD
         # --- XSS simulation endpoints ---
 
         # /search?q=... — vulnerable, reflects raw input
@@ -107,15 +87,16 @@ class Handler(BaseHTTPRequestHandler):
             self._respond(200, "text/html", xss_attr_body(name))
             return
 
+        # --- Auth simulation ---
+        if path == "/login-post":
+            # handled in do_POST
+            self._respond(405, "text/html", b"Method Not Allowed")
+            return
+
         # --- Standard routes ---
         if path in ROUTES:
             code, ctype, body = ROUTES[path]
             self._respond(code, ctype, body, redirect="/login" if code in (301, 302) else None)
-=======
-        if path in ROUTES:
-            code, ctype, body = ROUTES[path]
-            self._respond(code, ctype, body, redirect="/login" if code in (301,302) else None)
->>>>>>> c16ced108e1f612eb29120ab2eb5259e510265fe
         else:
             self._respond(404, "text/html", b"Not Found")
 
@@ -128,13 +109,35 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def do_POST(self):
+        parsed = urlparse(self.path)
+        path = parsed.path
+        length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(length).decode()
+        from urllib.parse import parse_qs
+        fields = {k: v[0] for k, v in parse_qs(body).items()}
+
+        if path == "/login-post":
+            user = fields.get("username", "")
+            pwd  = fields.get("password", "")
+            if VALID_CREDENTIALS.get(user) == pwd:
+                # Success — redirect to dashboard
+                self.send_response(302)
+                self.send_header("Location", "/dashboard")
+                self.send_header("Content-Length", "0")
+                self.end_headers()
+            else:
+                # Failure — return login page with error
+                body = b"<html><body>Invalid username or password. Try again.</body></html>"
+                self._respond(200, "text/html", body)
+            return
+
+        self._respond(404, "text/html", b"Not Found")
+
     def log_message(self, *args):
         pass
 
-<<<<<<< HEAD
 
-=======
->>>>>>> c16ced108e1f612eb29120ab2eb5259e510265fe
 if __name__ == "__main__":
     server = HTTPServer(("localhost", 9998), Handler)
     print("Mock server running on http://localhost:9998")

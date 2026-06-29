@@ -29,16 +29,19 @@ def build_parser():
     sq = vs.add_parser("sqli")
     sq.add_argument("--param")
     sq.add_argument("--method", choices=["GET","POST"], default="GET")
-<<<<<<< HEAD
     xs = vs.add_parser("xss")
     xs.add_argument("--param")
     xs.add_argument("--method", choices=["GET","POST"], default="GET")
-=======
->>>>>>> c16ced108e1f612eb29120ab2eb5259e510265fe
 
     # auth
     auth = sub.add_parser("auth")
     aus = auth.add_subparsers(dest="auth_module")
+    bf = aus.add_parser("bruteforce")
+    bf.add_argument("--login-url", required=True)
+    bf.add_argument("--userlist", default="wordlists/usernames.txt")
+    bf.add_argument("--passlist", default="wordlists/passwords.txt")
+    bf.add_argument("--user-field", default="username")
+    bf.add_argument("--pass-field", default="password")
 
     return p
 
@@ -73,13 +76,22 @@ def main():
             from modules.vulns.sqli import SQLiTester
             m = SQLiTester(args.target, config, logger)
             m.report(m.run(param=args.param, method=args.method), args.output)
-<<<<<<< HEAD
         elif args.vuln_module == "xss":
             from modules.vulns.xss import XSSTester
             m = XSSTester(args.target, config, logger)
             m.report(m.run(param=args.param, method=args.method), args.output)
-=======
->>>>>>> c16ced108e1f612eb29120ab2eb5259e510265fe
+
+    elif args.module == "auth":
+        if args.auth_module == "bruteforce":
+            from modules.auth.bruteforce import BruteForcer
+            m = BruteForcer(args.target, config, logger)
+            m.report(m.run(
+                login_url=args.login_url,
+                userlist=args.userlist,
+                passlist=args.passlist,
+                user_field=args.user_field,
+                pass_field=args.pass_field,
+            ), args.output)
 
 if __name__ == "__main__":
     main()
